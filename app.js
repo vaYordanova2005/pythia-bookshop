@@ -72,6 +72,7 @@ function showPage(page) {
   $$(".page").forEach((item) => item.classList.remove("active"));
   $(`#page-${page}`).classList.add("active");
   closePanels();
+  window.scrollTo({ top: 0, behavior: "smooth" });
   if (page === "cart") renderCart();
   if (page === "checkout") renderCheckout();
   if (page === "favorites") loadFavorites();
@@ -130,10 +131,12 @@ async function loadBooks() {
 async function loadGenres() {
   try {
     const genres = await api("/genres");
-    $("[data-genre-menu]").innerHTML = [
-      `<button class="gpill" type="button" data-genre="all">All</button>`,
-      ...genres.map((g) => `<button class="gpill" type="button" data-genre="${g.name}">${g.name}</button>`)
-    ].join("");
+    $("[data-genre-menu]").innerHTML = `
+      <strong style="color:var(--brown);font-size:.85rem;letter-spacing:.08em;text-transform:uppercase">All genres</strong>
+      <div class="genre-dd-grid">
+        <button class="gpill" type="button" data-genre="all">All</button>
+        ${genres.map((g) => `<button class="gpill" type="button" data-genre="${g.name}">${g.name}</button>`).join("")}
+      </div>`;
   } catch { /* ignore */ }
 }
 
@@ -489,8 +492,16 @@ document.addEventListener("click", async (event) => {
   const removeComment = event.target.closest("[data-remove-comment]")?.dataset.removeComment;
 
   if (page) showPage(page);
-  if (toggle === "genre-menu") $("[data-genre-menu]").classList.toggle("open");
-  if (toggle === "filter-panel") $("[data-filter-panel]").classList.toggle("open");
+  if (toggle === "genre-menu") {
+    event.stopPropagation();
+    $("[data-genre-menu]").classList.toggle("open");
+    return;
+  }
+  if (toggle === "filter-panel") {
+    event.stopPropagation();
+    $("[data-filter-panel]").classList.toggle("open");
+    return;
+  }
 
   if (genre) {
     state.activeGenre = genre;

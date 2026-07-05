@@ -102,8 +102,7 @@ input, select, textarea { cursor: auto; }
   padding: 9px 22px;
   border-bottom: 1px solid var(--green-mid);
   position: relative;
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow: visible;
 }
 .genre-main-btn {
   background: var(--brown);
@@ -135,20 +134,25 @@ input, select, textarea { cursor: auto; }
 /* Genre dropdown */
 .genre-dd {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 6px);
   left: 22px;
-  z-index: 50;
+  z-index: 200;
   display: none;
-  flex-wrap: wrap;
-  gap: 8px;
-  width: min(400px, calc(100vw - 40px));
-  padding: 14px;
-  background: white;
-  border: 1px solid var(--line);
+  flex-direction: column;
+  gap: 10px;
+  width: 280px;
+  padding: 16px;
+  background: var(--cream);
+  border: 1.5px solid var(--green-mid);
   border-radius: 12px;
   box-shadow: 0 12px 28px rgba(80,72,36,.16);
 }
 .genre-dd.open { display: flex; }
+.genre-dd-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
 .gpill {
   border: 1px solid var(--line);
   border-radius: 20px;
