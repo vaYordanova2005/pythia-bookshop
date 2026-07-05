@@ -1,24 +1,59 @@
-﻿# Bibliotheca Bookshop
+# Pythia Bookshop
 
-English UI prototype for an online bookshop.
+*Your oracle of stories*
 
-## Included
+An online bookshop built with Node.js, Express and PostgreSQL.
 
-- Homepage/catalog based on the provided banded design.
-- Temple + cute snake + open book SVG logo.
-- Genre menu, search, price/year/sort filters.
-- Book detail page with rating and comments.
-- Favorites, community chat, cart and checkout.
-- Discount code `BOOK10` for 10% off.
-- Free shipping over 40 EUR.
-- Extra 5% discount over 50 EUR.
-- Client, seller and admin role simulation.
-- MySQL schema in `database/library_shop.sql`.
+**Live site:** https://pythia-bookshop.onrender.com
 
-## Run
+---
+
+## Features
+
+- Book catalogue with search, genre filters, price/year/sort
+- Real book covers via Open Library
+- Ratings and comments per book
+- Favorites (requires login)
+- Cart and checkout with order history
+- Community chat
+- User roles: client, seller, admin
+- Discount code `BOOK10` for 10% off
+- Free shipping over 40 EUR
+- Extra 5% discount over 50 EUR
+- JWT authentication, bcrypt passwords, rate limiting, XSS protection
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Vanilla JS, HTML, CSS |
+| Backend | Node.js + Express |
+| Database | PostgreSQL (Supabase) |
+| Hosting | Render |
+
+---
+
+## Run locally
 
 ```bash
-python -m http.server 5173
+git clone https://github.com/vaYordanova2005/pythia-bookshop.git
+cd pythia-bookshop
+npm install
+cp .env.example .env
+node seed_pg.js
+npm start
 ```
 
-Open `http://localhost:5173`.
+Open `http://localhost:5173`
+
+---
+
+## Demo accounts
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@pythia.test | admin123 |
+| Seller | seller@pythia.test | seller123 |
+| Client | reader@pythia.test | reader123 |
