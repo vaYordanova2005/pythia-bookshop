@@ -5,6 +5,8 @@
 An online bookshop built with Node.js, Express and PostgreSQL, with an animated
 WebGL interface.
 
+**Live:** https://pythia-bookshop.onrender.com
+
 ---
 
 ## Features
@@ -38,7 +40,8 @@ WebGL interface.
 |-------|-----------|
 | Frontend | Vanilla JS, HTML, CSS, raw WebGL |
 | Backend | Node.js + Express |
-| Database | PostgreSQL (local) |
+| Database | PostgreSQL (Neon) |
+| Hosting | Render |
 
 No build step and no frontend dependencies — the browser loads the source files directly.
 
