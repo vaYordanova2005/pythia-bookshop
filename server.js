@@ -11,14 +11,32 @@ import { body, validationResult } from "express-validator";
 
 const { Pool } = pg;
 const app  = express();
+
+// Express 4 does not forward rejected promises from async handlers, so a single
+// failed query would take the whole process down. Wrap every handler once here
+// and let the error middleware at the bottom answer instead.
+for (const method of ["get", "post", "put", "patch", "delete"]) {
+  const register = app[method].bind(app);
+  app[method] = (path, ...handlers) =>
+    register(path, ...handlers.map((handler) =>
+      typeof handler === "function" && handler.length < 4
+        ? (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next)
+        : handler));
+}
 const PORT = process.env.PORT || 5173;
 const JWT_SECRET = process.env.JWT_SECRET || "pythia_secret";
 
 // ─── DB POOL ──────────────────────────────────────────────────────────────────
+// A local postgres has no SSL listener, so only negotiate it for remote hosts.
+const DB_URL = process.env.DATABASE_URL || "postgresql://postgres@localhost:5432/pythia";
+const isLocalDb = /@(localhost|127\.0\.0\.1|\[::1\])[:/]/.test(DB_URL);
+
 const db = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+  connectionString: DB_URL,
+  ssl: isLocalDb ? false : { rejectUnauthorized: false },
 });
+
+db.on("error", (err) => console.error("[db] idle client error:", err.message));
 
 // helper — same interface as mysql2 but for pg
 async function query(sql, params = []) {
@@ -461,7 +479,17 @@ app.get("/api/promo/:code", async (req, res) => {
   res.json({ code: rows[0].code, discountPct: rows[0].discount_pct });
 });
 
+// ─── ERRORS ───────────────────────────────────────────────────────────────────
+app.use((err, _req, res, _next) => {
+  const dbDown = ["ECONNREFUSED", "ENOTFOUND", "28P01", "3D000"].includes(err.code);
+  console.error("[api]", err.code || "", err.message);
+  res.status(dbDown ? 503 : 500).json({
+    error: dbDown ? "Database unavailable — check DATABASE_URL in .env" : "Something went wrong",
+  });
+});
+
 // ─── START ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`Pythia running → http://localhost:${PORT}`);
+  console.log(`DB → ${DB_URL.replace(/:\/\/[^@]*@/, "://***@")}`);
 });
