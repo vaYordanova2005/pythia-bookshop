@@ -237,7 +237,7 @@ input, select, textarea { cursor: auto; }
 
 .books-top {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: flex-end;
   gap: 18px;
   margin-bottom: 18px;
