@@ -44,10 +44,17 @@ const db = new Pool({
 db.on("error", (err) => console.error("[db] idle client error:", err.message));
 
 // helper — same interface as mysql2 but for pg
-async function query(sql, params = []) {
-  // convert ? placeholders to $1 $2 ... (already done in queries below)
-  const result = await db.query(sql, params);
-  return result.rows;
+// Neon suspends its compute after a few idle minutes; the first query after
+// that wakes it back up but the pooled client it lands on is already dead,
+// so the query fails with ECONNRESET once — retry it a single time.
+async function query(sql, params = [], retryOnReset = true) {
+  try {
+    const result = await db.query(sql, params);
+    return result.rows;
+  } catch (err) {
+    if (retryOnReset && err.code === "ECONNRESET") return query(sql, params, false);
+    throw err;
+  }
 }
 
 // ─── MIDDLEWARE ───────────────────────────────────────────────────────────────
@@ -486,7 +493,7 @@ app.get("/api/promo/:code", async (req, res) => {
 
 // ─── ERRORS ───────────────────────────────────────────────────────────────────
 app.use((err, _req, res, _next) => {
-  const dbDown = ["ECONNREFUSED", "ENOTFOUND", "28P01", "3D000"].includes(err.code);
+  const dbDown = ["ECONNREFUSED", "ENOTFOUND", "ECONNRESET", "28P01", "3D000"].includes(err.code);
   console.error("[api]", err.code || "", err.message);
   res.status(dbDown ? 503 : 500).json({
     error: dbDown ? "Database unavailable — check DATABASE_URL in .env" : "Something went wrong",
