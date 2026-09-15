@@ -33,7 +33,10 @@ document.addEventListener("error", (event) => {
   const color = img.dataset.fallbackColor || "#2c4a2c";
   const title = img.dataset.fallbackTitle || "";
   const block = document.createElement("div");
-  block.className = img.classList.contains("detail-cov-img") ? "detail-cov" : img.classList.contains("book-cover-img") ? "book-cover" : "";
+  block.className = img.classList.contains("detail-cov-img") ? "detail-cov"
+    : img.classList.contains("detail-thumb-img") ? "detail-thumb-fallback"
+    : img.classList.contains("book-cover-img") ? "book-cover"
+    : img.classList.contains("sugg-cov-img") ? "sugg-cov-fallback" : "";
   block.style.background = color;
   block.textContent = title;
   img.replaceWith(block);
@@ -208,6 +211,14 @@ function detailCoverHtml(book) {
   return `<div class="detail-cov" style="background:${book.color}">${book.title}</div>`;
 }
 
+function detailThumbHtml(book) {
+  if (book.coverUrl) {
+    return `<img class="detail-thumb-img" src="${escapeAttr(book.coverUrl)}" alt=""
+              data-cover-fallback data-fallback-color="${escapeAttr(book.color)}" data-fallback-title="" />`;
+  }
+  return `<div class="detail-thumb-fallback" style="background:${book.color}"></div>`;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // BOOK DETAIL
 // ─────────────────────────────────────────────────────────────────────────────
@@ -225,29 +236,55 @@ async function openBook(id) {
 
   $("[data-detail-content]").innerHTML = `
     <div class="detail-layout">
-      ${detailCoverHtml(book)}
+      <div class="detail-gallery">
+        <div class="detail-thumbs">
+          <button class="detail-thumb active" type="button" aria-label="Cover">${detailThumbHtml(book)}</button>
+        </div>
+        <div class="detail-main-image">${detailCoverHtml(book)}</div>
+      </div>
       <div class="detail-info">
         <h1>${book.title}</h1>
-        <div class="detail-author">${book.author}</div>
-        <div class="stars">${stars(book.rating)} <span class="muted">(${book.reviewCount} review${book.reviewCount === 1 ? "" : "s"})</span></div>
         <div class="detail-price">${eur.format(book.price)}</div>
+        <div class="stars">${stars(book.rating)} <span class="muted">(${book.reviewCount} review${book.reviewCount === 1 ? "" : "s"})</span></div>
+        <table class="detail-specs">
+          <tr><td>Author</td><td>${book.author}</td></tr>
+          <tr><td>Genre</td><td>${book.genre}</td></tr>
+          <tr><td>Pages</td><td>${book.pages}</td></tr>
+          <tr><td>Published</td><td>${book.year}</td></tr>
+          <tr><td>Availability</td><td>${book.stock > 0 ? `${book.stock} in stock` : "Out of stock"}</td></tr>
+        </table>
         <div class="tags">${book.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}</div>
-        <p>${book.description}</p>
-        <div class="card-actions">
+        <div class="detail-actions-row">
+          <button class="fav-heart-lg" type="button" data-favorite="${book.id}" aria-label="Toggle favorite">${isFavorite(book.id) ? "♥" : "♡"}</button>
+          <input class="detail-qty" type="number" min="1" value="1" data-detail-qty aria-label="Quantity" />
           <button class="co-btn" type="button" data-add-cart="${book.id}">Add to cart</button>
-          <button class="small-btn" type="button" data-favorite="${book.id}">${isFavorite(book.id) ? "Remove favorite" : "Add favorite"}</button>
         </div>
       </div>
     </div>
-    <section class="rate-sec">
-      <strong>Leave a rating and comment</strong>
-      <div class="star-row">${[1, 2, 3, 4, 5].map((n) => `<button class="sbt" type="button" data-star="${n}">★</button>`).join("")}</div>
-      <textarea data-comment-text placeholder="Write your opinion..."></textarea>
-      <button class="co-btn" type="button" data-submit-comment>Submit</button>
-      <div data-comment-list></div>
-    </section>`;
+
+    <div class="detail-tabs" data-detail-tabs>
+      <button class="detail-tab active" type="button" data-detail-tab="description">Description</button>
+      <button class="detail-tab" type="button" data-detail-tab="reviews">Reviews</button>
+    </div>
+
+    <section class="detail-tab-panel active" data-tab-panel="description">
+      <p>${book.description}</p>
+    </section>
+
+    <section class="detail-tab-panel" data-tab-panel="reviews">
+      <div class="rate-sec">
+        <strong>Leave a rating and comment</strong>
+        <div class="star-row">${[1, 2, 3, 4, 5].map((n) => `<button class="sbt" type="button" data-star="${n}">★</button>`).join("")}</div>
+        <textarea data-comment-text placeholder="Write your opinion..."></textarea>
+        <button class="co-btn" type="button" data-submit-comment>Submit</button>
+        <div data-comment-list></div>
+      </div>
+    </section>
+
+    <section class="sim-section" data-suggestions></section>`;
   renderStarInput();
   await loadCommentList(id);
+  await loadSuggestions(id);
   showPage("detail");
 }
 
@@ -271,15 +308,45 @@ async function loadCommentList(bookId) {
     : `<p class="muted">No comments yet.</p>`;
 }
 
+async function loadSuggestions(excludeId) {
+  const box = $("[data-suggestions]");
+  if (!box) return;
+  try {
+    const [newest, popular] = await Promise.all([api("/books?sort=new"), api("/books?sort=popular")]);
+    const pick = (list) => list.filter((b) => b.id !== excludeId).slice(0, 4);
+    const item = (b) => `
+      <div class="sugg-item" data-open-book="${b.id}">
+        <div class="sugg-cov">${b.coverUrl
+          ? `<img class="sugg-cov-img" src="${escapeAttr(b.coverUrl)}" alt="${escapeAttr(b.title)}" data-cover-fallback data-fallback-color="${escapeAttr(b.color)}" data-fallback-title="" />`
+          : `<div class="sugg-cov-fallback" style="background:${b.color}"></div>`}</div>
+        <div class="sugg-info">
+          <div class="sugg-title">${b.title}</div>
+          <div class="sugg-price">${eur.format(b.price)}</div>
+        </div>
+      </div>`;
+    box.innerHTML = `
+      <div class="sugg-col">
+        <h2 class="sim-title">New releases</h2>
+        ${pick(newest).map(item).join("") || `<p class="muted">No books yet.</p>`}
+      </div>
+      <div class="sugg-col">
+        <h2 class="sim-title">Best sellers</h2>
+        ${pick(popular).map(item).join("") || `<p class="muted">No books yet.</p>`}
+      </div>`;
+  } catch {
+    box.innerHTML = "";
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CART  (kept client-side, prices re-validated server-side at checkout)
 // ─────────────────────────────────────────────────────────────────────────────
-function addToCart(id) {
+function addToCart(id, quantity = 1) {
   const book = state.books.find((b) => b.id === id) || state.currentBook;
   if (!book) return;
   const existing = state.cart.find((item) => item.bookId === id);
-  if (existing) existing.quantity += 1;
-  else state.cart.push({ bookId: id, quantity: 1, _snapshot: { title: book.title, author: book.author, price: book.price, color: book.color, coverUrl: book.coverUrl || null } });
+  if (existing) existing.quantity += quantity;
+  else state.cart.push({ bookId: id, quantity, _snapshot: { title: book.title, author: book.author, price: book.price, color: book.color, coverUrl: book.coverUrl || null } });
   saveCart();
   updateBadge();
   toast(`${book.title} added to cart.`);
@@ -461,6 +528,7 @@ document.addEventListener("click", async (event) => {
   const open = event.target.closest("[data-open-book]")?.dataset.openBook;
   const favorite = event.target.closest("[data-favorite]")?.dataset.favorite;
   const add = event.target.closest("[data-add-cart]")?.dataset.addCart;
+  const detailTab = event.target.closest("[data-detail-tab]")?.dataset.detailTab;
   const removeBook = event.target.closest("[data-remove-book]")?.dataset.removeBook;
   const qty = event.target.closest("[data-qty]")?.dataset.qty;
   const removeCart = event.target.closest("[data-remove-cart]")?.dataset.removeCart;
@@ -492,7 +560,15 @@ document.addEventListener("click", async (event) => {
   }
   if (open && !event.target.closest("button")) navigateToBook(Number(open));
   if (favorite) toggleFavorite(Number(favorite));
-  if (add) addToCart(Number(add));
+  if (add) {
+    const qtyInput = $("[data-detail-qty]");
+    const quantity = qtyInput && $("#page-detail").classList.contains("active") ? Math.max(1, parseInt(qtyInput.value, 10) || 1) : 1;
+    addToCart(Number(add), quantity);
+  }
+  if (detailTab) {
+    $$('[data-detail-tab]').forEach((btn) => btn.classList.toggle("active", btn.dataset.detailTab === detailTab));
+    $$('[data-tab-panel]').forEach((panel) => panel.classList.toggle("active", panel.dataset.tabPanel === detailTab));
+  }
 
   if (removeBook && state.role === "admin") {
     try {

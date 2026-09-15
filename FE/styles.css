@@ -393,9 +393,23 @@ h1 { margin: 0; color: var(--brown); font-size: clamp(1.6rem, 4vw, 2.4rem); }
   gap: 30px;
   margin-bottom: 24px;
 }
+.detail-gallery { display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+.detail-thumbs { display: flex; gap: 8px; }
+.detail-thumb {
+  width: 56px;
+  height: 76px;
+  padding: 0;
+  border: 2px solid var(--green-dark);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--white);
+  cursor: default;
+}
+.detail-thumb img, .detail-thumb-fallback { width: 100%; height: 100%; object-fit: cover; display: block; }
+.detail-thumb-fallback { background: var(--green-mid); }
 .detail-cov {
-  width: 210px;
-  height: 290px;
+  width: 260px;
+  height: 360px;
   border-radius: 12px;
   border: 3px solid var(--green-mid);
   display: grid;
@@ -416,10 +430,50 @@ h1 { margin: 0; color: var(--brown); font-size: clamp(1.6rem, 4vw, 2.4rem); }
 }
 .detail-info  { max-width: 780px; }
 .detail-info h1 { margin-bottom: 6px; }
-.detail-author { color: var(--muted); margin-bottom: 8px; }
-.detail-price  { color: var(--brown); font-size: 1.7rem; font-weight: 700; margin: 8px 0; }
+.detail-price  { color: var(--danger); font-size: 1.7rem; font-weight: 700; margin: 8px 0; }
+.detail-specs { border-collapse: collapse; margin: 14px 0; }
+.detail-specs td { padding: 5px 14px 5px 0; border-bottom: 1px solid var(--line); font-size: .92rem; }
+.detail-specs td:first-child { color: var(--muted); white-space: nowrap; }
+.detail-specs td:last-child { font-weight: 600; }
 .tags { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0 14px; }
 .tag  { background: var(--green-light); border: 1px solid var(--line); border-radius: 20px; color: var(--muted); padding: 4px 12px; font-size: .82rem; }
+.detail-actions-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.fav-heart-lg {
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.3rem;
+  color: var(--danger);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.fav-heart-lg:hover { background: var(--green-light); }
+.detail-qty {
+  width: 60px;
+  height: 44px;
+  text-align: center;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+/* Tabs */
+.detail-tabs { display: flex; gap: 26px; border-bottom: 2px solid var(--line); margin-top: 30px; }
+.detail-tab {
+  background: none;
+  border: none;
+  padding: 10px 2px 12px;
+  font-weight: 700;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+.detail-tab.active { color: var(--danger); border-bottom-color: var(--danger); }
+.detail-tab-panel { display: none; padding-top: 20px; }
+.detail-tab-panel.active { display: block; }
 
 /* Rating section */
 .rate-sec {
@@ -427,7 +481,6 @@ h1 { margin: 0; color: var(--brown); font-size: clamp(1.6rem, 4vw, 2.4rem); }
   border: 1.5px solid var(--green-mid);
   border-radius: 12px;
   padding: 16px;
-  margin-top: 24px;
   max-width: 620px;
 }
 .star-row { display: flex; gap: 3px; margin: 10px 0; }
@@ -447,8 +500,17 @@ h1 { margin: 0; color: var(--brown); font-size: clamp(1.6rem, 4vw, 2.4rem); }
   padding: 10px 12px;
   margin-top: 10px;
 }
-.sim-section { margin-top: 28px; }
-.sim-title { color: var(--brown); font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; }
+
+/* Suggestions */
+.sim-section { margin-top: 34px; display: flex; gap: 40px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 24px; }
+.sugg-col { flex: 1; min-width: 220px; }
+.sim-title { color: var(--danger); font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; }
+.sugg-item { display: flex; gap: 12px; align-items: center; padding: 8px 0; cursor: pointer; }
+.sugg-item:hover .sugg-title { color: var(--brown); }
+.sugg-cov, .sugg-cov-fallback { width: 46px; height: 64px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
+.sugg-cov img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+.sugg-title { font-weight: 600; font-size: .92rem; }
+.sugg-price { color: var(--danger); font-weight: 700; font-size: .88rem; margin-top: 2px; }
 
 /* ═══════════════════════════════════════════
    CART PAGE
@@ -799,6 +861,7 @@ textarea { min-height: 86px; resize: vertical; }
   .checkout-grid { grid-template-columns: 1fr; }
   .detail-layout { flex-direction: column; }
   .detail-cov { width: 100%; height: 220px; }
+  .sim-section { gap: 24px; }
 }
 @media (max-width: 720px) {
   .books-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
