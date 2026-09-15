@@ -84,6 +84,33 @@ function closePanels() {
   $$('[data-genre-menu], [data-filter-panel]').forEach((item) => item.classList.remove("open"));
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ROUTING — every navigation updates location.hash so the browser's own
+// Back/Forward buttons walk the same history as our in-app links.
+// ─────────────────────────────────────────────────────────────────────────────
+function navigate(page) {
+  const target = page === "home" ? "#/" : `#/${page}`;
+  if (location.hash === target) applyRoute();
+  else location.hash = target;
+}
+
+function navigateToBook(id) {
+  const target = `#/book/${id}`;
+  if (location.hash === target) applyRoute();
+  else location.hash = target;
+}
+
+function applyRoute() {
+  const path = location.hash.replace(/^#\/?/, "");
+  const bookMatch = path.match(/^book\/(\d+)$/);
+  if (bookMatch) return openBook(Number(bookMatch[1]));
+  const page = path || "home";
+  if (!document.getElementById(`page-${page}`)) return showPage("home");
+  showPage(page);
+}
+
+window.addEventListener("hashchange", applyRoute);
+
 function toast(message) {
   const box = $("[data-toast]");
   box.textContent = message;
@@ -461,7 +488,7 @@ function renderAuth() {
     signInForm.classList.toggle("hidden", Boolean(user));
   }
 
-  if (profileButton) profileButton.textContent = user ? `Profile (${user.username})` : "Sign in";
+  if (profileButton) profileButton.textContent = user ? `Profile (${user.username})` : "Profile";
 
   if (user) {
     $("[data-profile-avatar]").textContent = user.username.slice(0, 1).toUpperCase();
@@ -491,7 +518,7 @@ document.addEventListener("click", async (event) => {
   const star = event.target.closest("[data-star]")?.dataset.star;
   const removeComment = event.target.closest("[data-remove-comment]")?.dataset.removeComment;
 
-  if (page) showPage(page);
+  if (page) navigate(page);
   if (toggle === "genre-menu") {
     event.stopPropagation();
     $("[data-genre-menu]").classList.toggle("open");
@@ -512,9 +539,9 @@ document.addEventListener("click", async (event) => {
     $$('[data-genre]').forEach((button) => button.classList.toggle("active", button.dataset.genre === genre));
     closePanels();
     await loadBooks();
-    showPage("home");
+    navigate("home");
   }
-  if (open && !event.target.closest("button")) openBook(Number(open));
+  if (open && !event.target.closest("button")) navigateToBook(Number(open));
   if (favorite) toggleFavorite(Number(favorite));
   if (add) addToCart(Number(add));
   if (share) shareBook(Number(share));
@@ -759,7 +786,7 @@ $("[data-chat-input]").addEventListener("keydown", (event) => { if (event.key ==
 function closeOrderModal() {
   document.getElementById("order-modal").classList.remove("visible");
   renderCheckout();
-  showPage("home");
+  navigate("home");
 }
 document.getElementById("order-modal-close").addEventListener("click", closeOrderModal);
 document.getElementById("order-modal").addEventListener("click", (e) => {
@@ -775,6 +802,7 @@ async function renderAll() {
   await loadBooks();
   updateBadge();
   renderAuth();
+  applyRoute();
 }
 
 renderAll();
