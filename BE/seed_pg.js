@@ -58,17 +58,6 @@ for (const [userId, title, rating, comment] of reviews) {
 }
 console.log("✓ sample reviews seeded");
 
-// Sample community messages
-const messages = [
-  [clientId, "Dune is absolutely worth the hype!"],
-  [clientId, "Has anyone read Cosmos recently?"],
-  [sellerId, "New mystery books coming this week — stay tuned."],
-];
-for (const [userId, text] of messages) {
-  await db.query("INSERT INTO messages (user_id, text) VALUES ($1,$2)", [userId, text]);
-}
-console.log("✓ sample community messages seeded");
-
 await db.end();
 console.log("\nSeeding complete! Demo logins:");
 console.log("  admin@pythia.test  / admin123");

@@ -436,35 +436,6 @@ app.get("/api/orders", auth, async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMMUNITY CHAT
-// ═══════════════════════════════════════════════════════════════════════════════
-app.get("/api/messages", async (_req, res) => {
-  const rows = await query(
-    `SELECT m.id, m.text, m.created_at, u.username
-     FROM messages m JOIN users u ON m.user_id = u.id
-     ORDER BY m.created_at ASC LIMIT 200`
-  );
-  res.json(rows);
-});
-
-app.post("/api/messages", auth,
-  body("text").trim().isLength({ min:1, max:500 }),
-  validate,
-  async (req, res) => {
-    const safeText = escapeHtml(req.body.text.trim());
-    const rows = await query(
-      "INSERT INTO messages (user_id, text) VALUES ($1,$2) RETURNING id", [req.user.id, safeText]
-    );
-    res.json({ id: rows[0].id, username: req.user.username, text: safeText });
-  }
-);
-
-app.delete("/api/messages/:id", auth, requireRole("admin"), async (req, res) => {
-  await query("DELETE FROM messages WHERE id=$1", [req.params.id]);
-  res.json({ message: "Deleted" });
-});
-
-// ═══════════════════════════════════════════════════════════════════════════════
 // ADMIN
 // ═══════════════════════════════════════════════════════════════════════════════
 app.get("/api/admin/users", auth, requireRole("admin"), async (_req, res) => {

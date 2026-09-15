@@ -143,16 +143,6 @@ CREATE TABLE reviews (
   FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
-CREATE TABLE community_messages (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT,
-  book_id INT,
-  message TEXT NOT NULL,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE SET NULL
-) ENGINE = InnoDB;
-
 INSERT INTO users (username, full_name, email, password_hash, role) VALUES
 ('admin', 'Site Admin', 'admin@bibliotheca.test', 'demo-only-change-me', 'admin'),
 ('seller_ivy', 'Ivy Seller', 'seller@bibliotheca.test', 'demo-only-change-me', 'seller'),
@@ -203,7 +193,3 @@ INSERT INTO discount_codes (code, discount_type, discount_value, min_order_total
 INSERT INTO reviews (user_id, book_id, rating, comment) VALUES
 (3, 1, 5, 'A landmark science-fiction novel.'),
 (3, 8, 4, 'Beautiful and accessible science writing.');
-
-INSERT INTO community_messages (user_id, book_id, message) VALUES
-(3, 1, 'Dune is absolutely worth the hype.'),
-(2, NULL, 'New mystery books are coming this week.');

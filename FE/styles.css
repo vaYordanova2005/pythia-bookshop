@@ -196,7 +196,7 @@ input, select, textarea { cursor: auto; }
 .search-btn:hover { background: var(--brown-mid); }
 
 /* ═══════════════════════════════════════════
-   BAND 4 — NAV (profile / favs / community / cart)
+   BAND 4 — NAV (profile / favs / cart)
    ═══════════════════════════════════════════ */
 .nav-band {
   background: var(--green-light);
@@ -544,63 +544,6 @@ h1 { margin: 0; color: var(--brown); font-size: clamp(1.6rem, 4vw, 2.4rem); }
 .form-message { min-height: 18px; margin: 0; color: var(--danger); font-size: .84rem; }
 
 /* ═══════════════════════════════════════════
-   COMMUNITY CHAT
-   ═══════════════════════════════════════════ */
-.comm-pg  { padding: 20px 22px 34px; max-width: 720px; }
-.comm-title { color: var(--brown); margin-bottom: 14px; }
-.chat-box {
-  height: 340px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: white;
-  border: 1.5px solid var(--green-mid);
-  border-radius: 12px;
-  padding: 14px;
-}
-.msg { display: flex; gap: 10px; }
-.msg.mine { flex-direction: row-reverse; }
-.mav {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--green-mid);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  font-size: .85rem;
-  font-weight: 700;
-  color: var(--brown);
-}
-.mbody {
-  max-width: 76%;
-  background: var(--green-light);
-  border-radius: 10px;
-  padding: 8px 12px;
-}
-.msg.mine .mbody { background: var(--green-mid); }
-.muser { color: var(--muted); font-size: .74rem; margin-bottom: 3px; }
-.chat-row { display: flex; gap: 8px; margin-top: 12px; }
-.chat-in {
-  flex: 1;
-  border: 1.5px solid var(--line);
-  border-radius: 24px;
-  padding: 9px 16px;
-  background: white;
-}
-.chat-in:focus { outline: none; border-color: var(--green-dark); }
-.csend {
-  background: var(--brown);
-  color: var(--amber);
-  border: none;
-  border-radius: 24px;
-  padding: 9px 20px;
-  font-weight: 700;
-}
-.csend:hover { background: var(--brown-mid); }
-
-/* ═══════════════════════════════════════════
    FAVORITES
    ═══════════════════════════════════════════ */
 .favs-pg   { padding: 20px 22px 34px; }
@@ -864,7 +807,7 @@ textarea { min-height: 86px; resize: vertical; }
   .logo-wrap { flex-direction: column; gap: 10px; text-align: center; }
   .logo-text { text-align: center; }
   .genre-band, .search-band, .nav-band { padding-inline: 12px; }
-  .books-area, .detail, .cart-pg, .checkout-pg, .comm-pg, .favs-pg, .prof-pg { padding-inline: 14px; }
+  .books-area, .detail, .cart-pg, .checkout-pg, .favs-pg, .prof-pg { padding-inline: 14px; }
   .books-grid { grid-template-columns: 1fr; }
   .books-top { flex-direction: column; align-items: stretch; }
 }

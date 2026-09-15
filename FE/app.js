@@ -1,8 +1,8 @@
 ﻿const API = "/api";
 
 const permissions = {
-  client: ["Buy books", "Write ratings and comments", "Use discount codes", "Join the community chat"],
-  seller: ["Add new books", "Manage their own listings", "Share books to community chat"],
+  client: ["Buy books", "Write ratings and comments", "Use discount codes"],
+  seller: ["Add new books", "Manage their own listings"],
   admin: ["Add and remove books", "Moderate comments", "Manage users and seller listings", "View order data"]
 };
 
@@ -17,8 +17,7 @@ const state = {
   activeGenre: "all",
   currentBookId: null,
   currentBook: null,
-  currentStars: 0,
-  messages: []
+  currentStars: 0
 };
 
 const eur = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR" });
@@ -76,7 +75,6 @@ function showPage(page) {
   if (page === "cart") renderCart();
   if (page === "checkout") renderCheckout();
   if (page === "favorites") loadFavorites();
-  if (page === "community") loadMessages();
   if (page === "orders") loadOrders();
 }
 
@@ -190,7 +188,6 @@ function bookCard(book) {
         <div class="book-row"><span class="stars-sm">${stars(book.rating)}</span><span class="book-price">${eur.format(book.price)}</span></div>
         <div class="card-actions">
           <button class="small-btn" type="button" data-add-cart="${book.id}">Add to cart</button>
-          <button class="small-btn" type="button" data-share-book="${book.id}">Send to chat</button>
           ${state.role === "admin" ? `<button class="small-btn" type="button" data-remove-book="${book.id}">Remove</button>` : ""}
         </div>
       </div>
@@ -239,7 +236,6 @@ async function openBook(id) {
         <div class="card-actions">
           <button class="co-btn" type="button" data-add-cart="${book.id}">Add to cart</button>
           <button class="small-btn" type="button" data-favorite="${book.id}">${isFavorite(book.id) ? "Remove favorite" : "Add favorite"}</button>
-          <button class="small-btn" type="button" data-share-book="${book.id}">Send to chat</button>
         </div>
       </div>
     </div>
@@ -410,52 +406,6 @@ async function loadOrders() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// COMMUNITY CHAT  (server-backed)
-// ─────────────────────────────────────────────────────────────────────────────
-async function loadMessages() {
-  try {
-    state.messages = await api("/messages");
-  } catch { state.messages = []; }
-  renderChat();
-}
-
-function renderChat() {
-  const box = $("[data-chat-box]");
-  const myName = displayUserName();
-  box.innerHTML = state.messages.map((msg) => {
-    const mine = msg.username === myName;
-    return `<div class="msg ${mine ? "mine" : ""}"><div class="mav">${(msg.username || "?").slice(0, 1).toUpperCase()}</div><div class="mbody"><div class="muser">${msg.username}</div><div>${msg.text}</div></div></div>`;
-  }).join("");
-  box.scrollTop = box.scrollHeight;
-}
-
-async function sendChat() {
-  const input = $("[data-chat-input]");
-  const text = input.value.trim();
-  if (!text) return;
-  if (!state.user) { toast("Please sign in to chat."); return; }
-  try {
-    await api("/messages", { method: "POST", body: JSON.stringify({ text }) });
-    input.value = "";
-    await loadMessages();
-  } catch (err) {
-    toast(err.message);
-  }
-}
-
-async function shareBook(id) {
-  if (!state.user) { toast("Please sign in to share to chat."); return; }
-  const book = state.books.find((b) => b.id === id) || state.currentBook;
-  if (!book) return;
-  try {
-    await api("/messages", { method: "POST", body: JSON.stringify({ text: `Book recommendation: ${book.title} by ${book.author}` }) });
-    toast("Book sent to community chat.");
-  } catch (err) {
-    toast(err.message);
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // AUTH
 // ─────────────────────────────────────────────────────────────────────────────
 async function loadMe() {
@@ -511,7 +461,6 @@ document.addEventListener("click", async (event) => {
   const open = event.target.closest("[data-open-book]")?.dataset.openBook;
   const favorite = event.target.closest("[data-favorite]")?.dataset.favorite;
   const add = event.target.closest("[data-add-cart]")?.dataset.addCart;
-  const share = event.target.closest("[data-share-book]")?.dataset.shareBook;
   const removeBook = event.target.closest("[data-remove-book]")?.dataset.removeBook;
   const qty = event.target.closest("[data-qty]")?.dataset.qty;
   const removeCart = event.target.closest("[data-remove-cart]")?.dataset.removeCart;
@@ -544,7 +493,6 @@ document.addEventListener("click", async (event) => {
   if (open && !event.target.closest("button")) navigateToBook(Number(open));
   if (favorite) toggleFavorite(Number(favorite));
   if (add) addToCart(Number(add));
-  if (share) shareBook(Number(share));
 
   if (removeBook && state.role === "admin") {
     try {
@@ -776,9 +724,6 @@ async function resolveGenreId(genreName) {
     return 1;
   }
 }
-
-$("[data-send-chat]").addEventListener("click", sendChat);
-$("[data-chat-input]").addEventListener("keydown", (event) => { if (event.key === "Enter") sendChat(); });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ORDER SUCCESS MODAL

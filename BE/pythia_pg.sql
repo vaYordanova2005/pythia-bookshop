@@ -116,14 +116,6 @@ CREATE TABLE IF NOT EXISTS order_items (
   unit_price NUMERIC(8,2) NOT NULL
 );
 
--- COMMUNITY MESSAGES
-CREATE TABLE IF NOT EXISTS messages (
-  id         SERIAL PRIMARY KEY,
-  user_id    INT  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  text       TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- PROMO CODES
 CREATE TABLE IF NOT EXISTS promo_codes (
   id           SERIAL PRIMARY KEY,

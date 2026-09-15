@@ -159,18 +159,6 @@ CREATE TABLE order_items (
 ) ENGINE=InnoDB;
 
 -- ─────────────────────────────────────────
--- 12. COMMUNITY MESSAGES
--- ─────────────────────────────────────────
-CREATE TABLE messages (
-    id         INT AUTO_INCREMENT PRIMARY KEY,
-    user_id    INT  NOT NULL,
-    text       TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- ─────────────────────────────────────────
 -- 13. PROMO CODES
 -- ─────────────────────────────────────────
 CREATE TABLE promo_codes (
@@ -238,5 +226,5 @@ INSERT INTO promo_codes (code, discount_pct, is_active) VALUES
 ('BOOK10', 10, TRUE),
 ('WELCOME5', 5, TRUE);
 
--- Sample reviews and community messages are inserted by `npm run seed`
+-- Sample reviews are inserted by `npm run seed`
 -- (they reference the demo users created there).

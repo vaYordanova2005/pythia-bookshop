@@ -1,5 +1,5 @@
 // seed.js — creates demo users (admin / seller / client) with real bcrypt
-// hashes, plus a few sample reviews and community messages.
+// hashes, plus a few sample reviews.
 // Run once after importing pythia.sql:
 //
 //   node seed.js
@@ -53,17 +53,6 @@ for (const [userId, bookId, rating, comment] of reviews) {
   );
 }
 console.log("✓ sample reviews seeded");
-
-// Sample community messages
-const messages = [
-  [clientId, "Dune is absolutely worth the hype!"],
-  [clientId, "Has anyone read Cosmos recently?"],
-  [sellerId, "New mystery books coming this week — stay tuned."],
-];
-for (const [userId, text] of messages) {
-  await db.query("INSERT INTO messages (user_id, text) VALUES (?,?)", [userId, text]);
-}
-console.log("✓ sample community messages seeded");
 
 await db.end();
 console.log("\nSeeding complete. Demo logins:");

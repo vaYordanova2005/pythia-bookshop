@@ -16,7 +16,6 @@ WebGL interface.
 - Ratings and comments per book
 - Favorites (requires login)
 - Cart and checkout with order history
-- Community chat
 - User roles: client, seller, admin
 - Discount code `BOOK10` for 10% off
 - Free shipping over 40 EUR, extra 5% over 50 EUR
