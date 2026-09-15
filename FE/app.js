@@ -185,11 +185,12 @@ function coverHtml(book) {
     return `<img class="book-cover book-cover-img" src="${escapeAttr(book.coverUrl)}" alt="${escapeAttr(book.title)} cover"
               loading="lazy" data-cover-fallback data-fallback-color="${escapeAttr(book.color)}" data-fallback-title="${escapeAttr(book.title)}" />`;
   }
-  return `<div class="book-cover" style="background:${book.color}">${book.title}</div>`;
+  return `<div class="book-cover" style="background:${escapeAttr(book.color)}">${escapeAttr(book.title)}</div>`;
 }
 
 function escapeAttr(str) {
-  return String(str ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
 function bookCard(book) {
@@ -198,8 +199,8 @@ function bookCard(book) {
       <button class="fav-heart" type="button" data-favorite="${book.id}" aria-label="Toggle favorite">${isFavorite(book.id) ? "♥" : "♡"}</button>
       <div class="book-cover-wrap">${coverHtml(book)}</div>
       <div class="book-info">
-        <div class="book-name">${book.title}</div>
-        <div class="book-author">${book.author}</div>
+        <div class="book-name">${escapeAttr(book.title)}</div>
+        <div class="book-author">${escapeAttr(book.author)}</div>
         <div class="book-row"><span class="stars-sm">${stars(book.rating)}</span><span class="book-price">${eur.format(book.price)}</span></div>
         <div class="card-actions">
           <button class="small-btn" type="button" data-add-cart="${book.id}">Add to cart</button>
@@ -220,7 +221,7 @@ function detailCoverHtml(book) {
     return `<img class="detail-cov detail-cov-img" src="${escapeAttr(book.coverUrl)}" alt="${escapeAttr(book.title)} cover"
               data-cover-fallback data-fallback-color="${escapeAttr(book.color)}" data-fallback-title="${escapeAttr(book.title)}" />`;
   }
-  return `<div class="detail-cov" style="background:${book.color}">${book.title}</div>`;
+  return `<div class="detail-cov" style="background:${escapeAttr(book.color)}">${escapeAttr(book.title)}</div>`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -244,17 +245,17 @@ async function openBook(id) {
         <div class="detail-main-image">${detailCoverHtml(book)}</div>
       </div>
       <div class="detail-info">
-        <h1>${book.title}</h1>
+        <h1>${escapeAttr(book.title)}</h1>
         <div class="detail-price">${eur.format(book.price)}</div>
         <div class="stars">${stars(book.rating)} <span class="muted">(${book.reviewCount} review${book.reviewCount === 1 ? "" : "s"})</span></div>
         <table class="detail-specs">
-          <tr><td>Author</td><td>${book.author}</td></tr>
-          <tr><td>Genre</td><td>${book.genre}</td></tr>
+          <tr><td>Author</td><td>${escapeAttr(book.author)}</td></tr>
+          <tr><td>Genre</td><td>${escapeAttr(book.genre)}</td></tr>
           <tr><td>Pages</td><td>${book.pages}</td></tr>
           <tr><td>Published</td><td>${book.year}</td></tr>
           <tr><td>Availability</td><td>${book.stock > 0 ? `${book.stock} in stock` : "Out of stock"}</td></tr>
         </table>
-        ${book.tags.length ? `<div class="tags">${book.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}</div>` : ""}
+        ${book.tags.length ? `<div class="tags">${book.tags.map((tag) => `<span class="tag">${escapeAttr(tag)}</span>`).join("")}</div>` : ""}
         <div class="detail-actions-row">
           <button class="fav-heart-lg" type="button" data-favorite="${book.id}" aria-label="Toggle favorite">${isFavorite(book.id) ? "♥" : "♡"}</button>
           <input class="detail-qty" type="number" min="1" value="1" data-detail-qty aria-label="Quantity" />
@@ -269,7 +270,7 @@ async function openBook(id) {
     </div>
 
     <section class="detail-tab-panel active" data-tab-panel="description">
-      <p>${book.description}</p>
+      <p>${escapeAttr(book.description)}</p>
     </section>
 
     <section class="detail-tab-panel" data-tab-panel="reviews">
@@ -301,9 +302,9 @@ async function loadCommentList(bookId) {
   list.innerHTML = reviews.length
     ? reviews.map((r) => `
         <div class="cmt-item">
-          <div class="muted">${r.username}</div>
+          <div class="muted">${escapeAttr(r.username)}</div>
           <div class="stars-sm">${stars(r.rating)}</div>
-          <p>${r.comment || ""}</p>
+          <p>${escapeAttr(r.comment || "")}</p>
           ${state.role === "admin" ? `<button class="small-btn" type="button" data-remove-comment="${r.id}">Remove</button>` : ""}
         </div>`).join("")
     : `<p class="muted">No comments yet.</p>`;
@@ -319,9 +320,9 @@ async function loadSuggestions(excludeId) {
       <div class="sugg-item" data-open-book="${b.id}">
         <div class="sugg-cov">${b.coverUrl
           ? `<img class="sugg-cov-img" src="${escapeAttr(b.coverUrl)}" alt="${escapeAttr(b.title)}" data-cover-fallback data-fallback-color="${escapeAttr(b.color)}" data-fallback-title="" />`
-          : `<div class="sugg-cov-fallback" style="background:${b.color}"></div>`}</div>
+          : `<div class="sugg-cov-fallback" style="background:${escapeAttr(b.color)}"></div>`}</div>
         <div class="sugg-info">
-          <div class="sugg-title">${b.title}</div>
+          <div class="sugg-title">${escapeAttr(b.title)}</div>
           <div class="sugg-price">${eur.format(b.price)}</div>
         </div>
       </div>`;
@@ -380,8 +381,8 @@ function renderCart() {
   const entries = cartEntries();
   $("[data-cart-items]").innerHTML = entries.length ? entries.map(({ book, quantity, bookId }) => `
     <article class="cart-item">
-      <div class="ccov" style="${book.coverUrl ? "" : `background:${book.color}`}">${book.coverUrl ? `<img src="${escapeAttr(book.coverUrl)}" alt="${escapeAttr(book.title)}" data-cover-fallback data-fallback-color="${escapeAttr(book.color)}" data-fallback-title="" />` : book.title}</div>
-      <div class="cinfo"><strong>${book.title}</strong><div class="cauth">${book.author}</div><div class="cqty"><button class="qb" data-qty="${bookId}:-1">-</button><span>${quantity}</span><button class="qb" data-qty="${bookId}:1">+</button></div></div>
+      <div class="ccov" style="${book.coverUrl ? "" : `background:${escapeAttr(book.color)}`}">${book.coverUrl ? `<img src="${escapeAttr(book.coverUrl)}" alt="${escapeAttr(book.title)}" data-cover-fallback data-fallback-color="${escapeAttr(book.color)}" data-fallback-title="" />` : escapeAttr(book.title)}</div>
+      <div class="cinfo"><strong>${escapeAttr(book.title)}</strong><div class="cauth">${escapeAttr(book.author)}</div><div class="cqty"><button class="qb" data-qty="${bookId}:-1">-</button><span>${quantity}</span><button class="qb" data-qty="${bookId}:1">+</button></div></div>
       <strong>${eur.format(book.price * quantity)}</strong>
       <button class="crm" type="button" data-remove-cart="${bookId}">x</button>
     </article>`).join("") : `<div class="empty-state">Your cart is empty.</div>`;
@@ -460,7 +461,7 @@ async function loadOrders() {
             <span class="order-status ${o.status}">${o.status}</span>
           </div>
           <div class="order-card-items">
-            📍 ${o.city}, ${o.street} ${o.number}
+            📍 ${escapeAttr(o.city)}, ${escapeAttr(o.street)} ${escapeAttr(o.number)}
           </div>
           <div class="order-card-foot">
             <span class="order-card-pay">💳 ${payment}</span>

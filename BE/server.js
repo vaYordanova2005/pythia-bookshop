@@ -29,7 +29,11 @@ for (const method of ["get", "post", "put", "patch", "delete"]) {
         : handler));
 }
 const PORT = process.env.PORT || 5173;
-const JWT_SECRET = process.env.JWT_SECRET || "pythia_secret";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("JWT_SECRET environment variable is required — refusing to start with a guessable default.");
+  process.exit(1);
+}
 
 // ─── DB POOL ──────────────────────────────────────────────────────────────────
 // A local postgres has no SSL listener, so only negotiate it for remote hosts.
@@ -66,7 +70,7 @@ const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || ALLOWED_ORIGINS.some(o => origin.startsWith(o))) return cb(null, true);
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
     cb(new Error("Not allowed by CORS"));
   }
 }));
@@ -88,12 +92,6 @@ app.use("/api/auth", authLimiter);
 app.use("/api", apiLimiter);
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
-function escapeHtml(str) {
-  if (typeof str !== "string") return str;
-  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-            .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-}
-
 function validate(req, res, next) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg });
@@ -240,7 +238,7 @@ app.get("/api/books/:id", async (req, res) => {
     LEFT JOIN book_tags bt    ON b.id = bt.book_id
     LEFT JOIN tags t          ON bt.tag_id = t.id
     LEFT JOIN reviews r       ON b.id = r.book_id
-    WHERE b.id = $1
+    WHERE b.id = $1 AND b.is_visible = TRUE
     GROUP BY b.id, g.name`, [req.params.id]);
   if (!rows[0]) return res.status(404).json({ error: "Not found" });
   res.json(formatBook(rows[0]));
@@ -314,12 +312,11 @@ app.post("/api/books/:id/reviews", auth,
   body("comment").optional().trim().isLength({ max:1000 }),
   validate,
   async (req, res) => {
-    const safeComment = req.body.comment ? escapeHtml(req.body.comment) : null;
     try {
       await query(
         `INSERT INTO reviews (user_id, book_id, rating, comment) VALUES ($1,$2,$3,$4)
          ON CONFLICT (user_id, book_id) DO UPDATE SET rating=EXCLUDED.rating, comment=EXCLUDED.comment`,
-        [req.user.id, req.params.id, req.body.rating, safeComment]
+        [req.user.id, req.params.id, req.body.rating, req.body.comment || null]
       );
       res.json({ message: "Review saved" });
     } catch { res.status(500).json({ error: "Server error" }); }
@@ -370,63 +367,81 @@ app.delete("/api/favorites/:bookId", auth, async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ORDERS
 // ═══════════════════════════════════════════════════════════════════════════════
-app.post("/api/orders", async (req, res) => {
-  const authHeader = req.headers.authorization;
-  let userId = null;
-  if (authHeader) { try { userId = jwt.verify(authHeader.split(" ")[1], JWT_SECRET).id; } catch {} }
+app.post("/api/orders",
+  body("fullName").trim().isLength({ min: 2, max: 120 }),
+  body("email").isEmail().normalizeEmail(),
+  body("city").trim().isLength({ min: 1, max: 120 }),
+  body("street").trim().isLength({ min: 1, max: 200 }),
+  body("number").trim().isLength({ min: 1, max: 20 }),
+  body("paymentMethod").isIn(["card", "cash_on_delivery", "bank_transfer"]),
+  body("needsInvoice").optional().isBoolean(),
+  body("promoCode").optional({ nullable: true }).isString().trim().isLength({ max: 30 }),
+  body("items").isArray({ min: 1 }),
+  body("items.*.bookId").isInt({ min: 1 }),
+  body("items.*.quantity").isInt({ min: 1, max: 99 }),
+  validate,
+  async (req, res) => {
+    const authHeader = req.headers.authorization;
+    let userId = null;
+    if (authHeader) { try { userId = jwt.verify(authHeader.split(" ")[1], JWT_SECRET).id; } catch {} }
 
-  const { fullName, email, city, street, number, paymentMethod, needsInvoice, promoCode, items } = req.body;
-  if (!items?.length) return res.status(400).json({ error: "Cart is empty" });
+    const { fullName, email, city, street, number, paymentMethod, needsInvoice, promoCode, items } = req.body;
 
-  const ids = items.map(i => i.bookId);
-  const books = await query(`SELECT id, price, stock FROM books WHERE id = ANY($1)`, [ids]);
-  const bookMap = Object.fromEntries(books.map(b => [b.id, b]));
+    const client = await db.connect();
+    try {
+      await client.query("BEGIN");
 
-  for (const item of items) {
-    const book = bookMap[item.bookId];
-    if (!book) return res.status(400).json({ error: `Book ${item.bookId} not found` });
-    if (book.stock < item.quantity) return res.status(400).json({ error: `Not enough stock for book ${item.bookId}` });
-  }
-
-  const subtotal = items.reduce((sum, i) => sum + bookMap[i.bookId].price * i.quantity, 0);
-  let promoDisc = 0;
-  if (promoCode) {
-    const pc = await query(
-      "SELECT * FROM promo_codes WHERE code=$1 AND is_active=TRUE AND (expires_at IS NULL OR expires_at > NOW())",
-      [promoCode.toUpperCase()]
-    );
-    if (pc[0]) promoDisc = subtotal * (pc[0].discount_pct / 100);
-  }
-  const afterPromo = subtotal - promoDisc;
-  const thresholdDisc = afterPromo > 50 ? afterPromo * 0.05 : 0;
-  const shipping = afterPromo > 40 ? 0 : 4.99;
-  const total = Math.max(0, afterPromo - thresholdDisc + shipping);
-
-  const client = await db.connect();
-  try {
-    await client.query("BEGIN");
-    const orderRows = await client.query(
-      `INSERT INTO orders (user_id, full_name, email, city, street, number, payment_method,
-        needs_invoice, promo_code, subtotal, promo_discount, threshold_disc, shipping, total)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`,
-      [userId, fullName, email, city, street, number, paymentMethod,
-       needsInvoice, promoCode||null, subtotal, promoDisc, thresholdDisc, shipping, total]
-    );
-    const orderId = orderRows.rows[0].id;
-    for (const item of items) {
-      await client.query(
-        "INSERT INTO order_items (order_id, book_id, quantity, unit_price) VALUES ($1,$2,$3,$4)",
-        [orderId, item.bookId, item.quantity, bookMap[item.bookId].price]
+      const ids = items.map(i => i.bookId);
+      // Lock the rows for the duration of the transaction so two concurrent
+      // orders can't both read the same stock count before either decrements it.
+      const books = await client.query(
+        `SELECT id, price, stock FROM books WHERE id = ANY($1) FOR UPDATE`, [ids]
       );
-      await client.query("UPDATE books SET stock = stock - $1 WHERE id=$2", [item.quantity, item.bookId]);
-    }
-    await client.query("COMMIT");
-    res.json({ orderId, total, message: "Order placed successfully" });
-  } catch {
-    await client.query("ROLLBACK");
-    res.status(500).json({ error: "Order failed" });
-  } finally { client.release(); }
-});
+      const bookMap = Object.fromEntries(books.rows.map(b => [b.id, b]));
+
+      for (const item of items) {
+        const book = bookMap[item.bookId];
+        if (!book) throw Object.assign(new Error(`Book ${item.bookId} not found`), { status: 400 });
+        if (book.stock < item.quantity) throw Object.assign(new Error(`Not enough stock for book ${item.bookId}`), { status: 400 });
+      }
+
+      const subtotal = items.reduce((sum, i) => sum + bookMap[i.bookId].price * i.quantity, 0);
+      let promoDisc = 0;
+      if (promoCode) {
+        const pc = await client.query(
+          "SELECT * FROM promo_codes WHERE code=$1 AND is_active=TRUE AND (expires_at IS NULL OR expires_at > NOW())",
+          [promoCode.toUpperCase()]
+        );
+        if (pc.rows[0]) promoDisc = subtotal * (pc.rows[0].discount_pct / 100);
+      }
+      const afterPromo = subtotal - promoDisc;
+      const thresholdDisc = afterPromo > 50 ? afterPromo * 0.05 : 0;
+      const shipping = afterPromo > 40 ? 0 : 4.99;
+      const total = Math.max(0, afterPromo - thresholdDisc + shipping);
+
+      const orderRows = await client.query(
+        `INSERT INTO orders (user_id, full_name, email, city, street, number, payment_method,
+          needs_invoice, promo_code, subtotal, promo_discount, threshold_disc, shipping, total)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`,
+        [userId, fullName, email, city, street, number, paymentMethod,
+         !!needsInvoice, promoCode||null, subtotal, promoDisc, thresholdDisc, shipping, total]
+      );
+      const orderId = orderRows.rows[0].id;
+      for (const item of items) {
+        await client.query(
+          "INSERT INTO order_items (order_id, book_id, quantity, unit_price) VALUES ($1,$2,$3,$4)",
+          [orderId, item.bookId, item.quantity, bookMap[item.bookId].price]
+        );
+        await client.query("UPDATE books SET stock = stock - $1 WHERE id=$2", [item.quantity, item.bookId]);
+      }
+      await client.query("COMMIT");
+      res.json({ orderId, total, message: "Order placed successfully" });
+    } catch (err) {
+      await client.query("ROLLBACK");
+      res.status(err.status || 500).json({ error: err.status ? err.message : "Order failed" });
+    } finally { client.release(); }
+  }
+);
 
 app.get("/api/orders", auth, async (req, res) => {
   const rows = req.user.role === "admin"
@@ -443,12 +458,17 @@ app.get("/api/admin/users", auth, requireRole("admin"), async (_req, res) => {
   res.json(rows);
 });
 
-app.patch("/api/admin/users/:id", auth, requireRole("admin"), async (req, res) => {
-  const { role, isActive } = req.body;
-  if (role)                  await query("UPDATE users SET role=$1 WHERE id=$2",      [role,     req.params.id]);
-  if (isActive !== undefined) await query("UPDATE users SET is_active=$1 WHERE id=$2", [isActive, req.params.id]);
-  res.json({ message: "User updated" });
-});
+app.patch("/api/admin/users/:id", auth, requireRole("admin"),
+  body("role").optional().isIn(["client", "seller", "admin"]),
+  body("isActive").optional().isBoolean(),
+  validate,
+  async (req, res) => {
+    const { role, isActive } = req.body;
+    if (role)                   await query("UPDATE users SET role=$1 WHERE id=$2",      [role,     req.params.id]);
+    if (isActive !== undefined) await query("UPDATE users SET is_active=$1 WHERE id=$2", [isActive, req.params.id]);
+    res.json({ message: "User updated" });
+  }
+);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PROMO CODES
