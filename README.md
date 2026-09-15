@@ -2,8 +2,7 @@
 
 *Δελφοί · the oracle of stories*
 
-An online bookshop built with Node.js, Express and PostgreSQL, with an animated
-WebGL interface.
+An online bookshop built with Node.js, Express and PostgreSQL.
 
 **Live:** https://pythia-bookshop.onrender.com
 
@@ -21,23 +20,11 @@ WebGL interface.
 - Free shipping over 40 EUR, extra 5% over 50 EUR
 - JWT authentication, bcrypt passwords, rate limiting, XSS protection
 
-## Interface
-
-- Site-wide animated backdrop — a hand-written GLSL fragment shader (domain-warped
-  fbm smoke with gold veins) that reacts to the cursor. No 3D libraries.
-- Kinetic wordmark: letters fly in one by one and shy away from the pointer
-- Book cards with cursor-tracked 3D tilt, depth layers and a glare sweep
-- Curtain wipe between pages, scroll progress bar, custom cursor
-- Falls back to an animated CSS gradient without WebGL, and to a static layout
-  under `prefers-reduced-motion`
-
----
-
 ## Tech stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Vanilla JS, HTML, CSS, raw WebGL |
+| Frontend | Vanilla JS, HTML, CSS |
 | Backend | Node.js + Express |
 | Database | PostgreSQL (Neon) |
 | Hosting | Render |
@@ -59,20 +46,20 @@ npm install
 Then set up the database. On Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\setup-db.ps1
+powershell -ExecutionPolicy Bypass -File .\BE\setup-db.ps1
 ```
 
 The script asks for your postgres password, creates the `pythia` database, loads
-the schema and books, seeds the demo users and writes `DATABASE_URL` into `.env`.
+the schema and books, seeds the demo users and writes `DATABASE_URL` into `BE/.env`.
 
 Manually, on any platform:
 
 ```bash
 psql -U postgres -c "CREATE DATABASE pythia"
-psql -U postgres -d pythia -f pythia_pg.sql    # schema + 8 books
-psql -U postgres -d pythia -f seed_books.sql   # 34 more books
-node seed_pg.js                                # demo users, reviews, chat
-cp .env.example .env                           # then fill in DATABASE_URL
+psql -U postgres -d pythia -f BE/pythia_pg.sql    # schema + 8 books
+psql -U postgres -d pythia -f BE/seed_books.sql   # 34 more books
+node BE/seed_pg.js                                # demo users, reviews
+cp BE/.env.example BE/.env                        # then fill in DATABASE_URL
 npm start
 ```
 
@@ -84,14 +71,15 @@ Open `http://localhost:5173`
 
 | File | Purpose |
 |------|---------|
-| `server.js` | Express API and static file server |
-| `app.js` | Frontend logic — routing, cart, auth, rendering |
-| `styles.css` | Base layout and components |
-| `fx.css` / `fx.js` | Animation layer: WebGL backdrop, dark glass surfaces, 3D cards |
-| `pythia_pg.sql` | Schema and initial seed |
-| `seed_books.sql` | The rest of the catalogue — re-runnable, nothing duplicates |
-| `seed_pg.js` | Demo users, reviews and chat messages |
-| `setup-db.ps1` | One-shot local database setup |
+| `BE/server.js` | Express API and static file server |
+| `FE/app.js` | Frontend logic — routing, cart, auth, rendering |
+| `FE/styles.css` | Base layout and components |
+| `BE/pythia_pg.sql` | Schema and initial seed |
+| `BE/seed_books.sql` | The rest of the catalogue — re-runnable, nothing duplicates |
+| `BE/seed_pg.js` | Demo users and reviews |
+| `BE/setup-db.ps1` | One-shot local database setup |
+
+See [docs/](docs/) for architecture, API, database and local-setup details.
 
 ---
 

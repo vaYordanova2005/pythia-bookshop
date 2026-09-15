@@ -8,5 +8,4 @@
 | [database.md](database.md) | PostgreSQL schema, tables, relationships, seed data |
 | [local-setup.md](local-setup.md) | Running locally (Windows + manual), env vars, demo accounts, Render deployment |
 
-For features, tech stack summary, and the WebGL interface description, see the
-root [README.md](../README.md).
+For features and tech stack summary, see the root [README.md](../README.md).

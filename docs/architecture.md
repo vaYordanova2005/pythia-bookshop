@@ -50,9 +50,12 @@ on your machine.
 | `FE/styles.css` | All styling |
 | `Procfile` | Render process definition |
 
-## Known documentation gap
+## History: the WebGL interface
 
-The root [README.md](../README.md) describes an animated WebGL backdrop (`fx.css`/`fx.js`,
-GLSL shader, 3D card tilt). Those files are not present in the current codebase —
-`FE/` only contains `index.html`, `app.js`, and `styles.css`. Treat the WebGL section
-of the README as aspirational/outdated until that code reappears.
+An earlier version of this project had a WebGL animation layer (`fx.css`/`fx.js` —
+a hand-written GLSL backdrop shader, 3D card tilt, kinetic wordmark). Commit
+`b347f62` ("Revert to pre-3D design, reorganize into BE/FE/docs") deliberately
+pulled that layer out into a separate game-design project and reverted the UI
+to the plain `styles.css`/`app.js` design that predates it — it wasn't dropped
+by accident. `FE/` has contained only `index.html`, `app.js`, and `styles.css`
+since.
