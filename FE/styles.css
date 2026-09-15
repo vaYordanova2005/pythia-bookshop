@@ -603,12 +603,11 @@ h1 { margin: 0; color: var(--brown); font-size: clamp(1.6rem, 4vw, 2.4rem); }
    FAVORITES
    ═══════════════════════════════════════════ */
 .favs-pg   { padding: 20px 22px 34px; }
-.favs-title { color: var(--brown); margin-bottom: 16px; }
 
 /* ═══════════════════════════════════════════
    PROFILE / AUTH
    ═══════════════════════════════════════════ */
-.prof-pg    { padding: 20px 22px 34px; max-width: 640px; margin-inline: auto; }
+.prof-pg    { padding: 20px 22px 34px; max-width: 640px; margin: 0 auto 0 80px; }
 .prof-card  {
   background: var(--green-light);
   border: 1.5px solid var(--green-mid);
