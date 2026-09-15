@@ -4,8 +4,13 @@
 //
 //   node add-covers.js
 //
-import "dotenv/config";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 import mysql from "mysql2/promise";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const db = await mysql.createConnection({
   host:     process.env.DB_HOST     || "localhost",

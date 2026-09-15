@@ -2,12 +2,12 @@
   "name": "bibliotheca",
   "version": "1.0.0",
   "description": "Online bookshop — Bibliotheca",
-  "main": "server.js",
+  "main": "BE/server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "seed": "node seed.js"
+    "start": "node BE/server.js",
+    "dev": "nodemon BE/server.js",
+    "seed": "node BE/seed.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

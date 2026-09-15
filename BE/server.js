@@ -1,5 +1,7 @@
 // server.js — Pythia bookshop backend (PostgreSQL)
-import "dotenv/config";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
@@ -8,6 +10,9 @@ import pg from "pg";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { body, validationResult } from "express-validator";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const { Pool } = pg;
 const app  = express();
@@ -59,7 +64,7 @@ app.use(cors({
   }
 }));
 app.use(express.json({ limit: "50kb" }));
-app.use(express.static("."));
+app.use(express.static(path.join(__dirname, "../FE")));
 
 // ─── RATE LIMITERS ────────────────────────────────────────────────────────────
 const authLimiter = rateLimit({
