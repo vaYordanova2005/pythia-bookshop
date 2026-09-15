@@ -175,7 +175,7 @@ async function loadGenres() {
       <strong style="color:var(--brown);font-size:.85rem;letter-spacing:.08em;text-transform:uppercase">All genres</strong>
       <div class="genre-dd-grid">
         <button class="gpill" type="button" data-genre="all">All</button>
-        ${genres.map((g) => `<button class="gpill" type="button" data-genre="${g.name}">${g.name}</button>`).join("")}
+        ${genres.map((g) => `<button class="gpill" type="button" data-genre="${escapeAttr(g.name)}">${escapeAttr(g.name)}</button>`).join("")}
       </div>`;
   } catch { /* ignore */ }
 }
