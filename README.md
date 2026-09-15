@@ -99,6 +99,5 @@ Open `http://localhost:5173`
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@pythia.test | admin123 |
 | Seller | seller@pythia.test | seller123 |
 | Client | reader@pythia.test | reader123 |
