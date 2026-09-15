@@ -27,20 +27,32 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 // ─────────────────────────────────────────────────────────────────────────────
 // COVER IMAGE FALLBACK  (delegated, runs once at load — safer than inline onerror)
 // ─────────────────────────────────────────────────────────────────────────────
-document.addEventListener("error", (event) => {
-  const img = event.target;
-  if (!(img instanceof HTMLImageElement) || !img.hasAttribute("data-cover-fallback")) return;
+function applyCoverFallback(img) {
   const color = img.dataset.fallbackColor || "#2c4a2c";
   const title = img.dataset.fallbackTitle || "";
   const block = document.createElement("div");
   block.className = img.classList.contains("detail-cov-img") ? "detail-cov"
-    : img.classList.contains("detail-thumb-img") ? "detail-thumb-fallback"
     : img.classList.contains("book-cover-img") ? "book-cover"
     : img.classList.contains("sugg-cov-img") ? "sugg-cov-fallback" : "";
   block.style.background = color;
   block.textContent = title;
   img.replaceWith(block);
+}
+
+document.addEventListener("error", (event) => {
+  const img = event.target;
+  if (!(img instanceof HTMLImageElement) || !img.hasAttribute("data-cover-fallback")) return;
+  applyCoverFallback(img);
 }, true); // capture phase — "error" doesn't bubble
+
+// Open Library returns HTTP 200 with a 1x1 placeholder pixel when it has no
+// cover for an ISBN, so a failed load never fires the "error" event above —
+// only a size check on "load" catches it.
+document.addEventListener("load", (event) => {
+  const img = event.target;
+  if (!(img instanceof HTMLImageElement) || !img.hasAttribute("data-cover-fallback")) return;
+  if (img.naturalWidth <= 1 || img.naturalHeight <= 1) applyCoverFallback(img);
+}, true);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // API HELPER
@@ -211,14 +223,6 @@ function detailCoverHtml(book) {
   return `<div class="detail-cov" style="background:${book.color}">${book.title}</div>`;
 }
 
-function detailThumbHtml(book) {
-  if (book.coverUrl) {
-    return `<img class="detail-thumb-img" src="${escapeAttr(book.coverUrl)}" alt=""
-              data-cover-fallback data-fallback-color="${escapeAttr(book.color)}" data-fallback-title="" />`;
-  }
-  return `<div class="detail-thumb-fallback" style="background:${book.color}"></div>`;
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // BOOK DETAIL
 // ─────────────────────────────────────────────────────────────────────────────
@@ -237,9 +241,6 @@ async function openBook(id) {
   $("[data-detail-content]").innerHTML = `
     <div class="detail-layout">
       <div class="detail-gallery">
-        <div class="detail-thumbs">
-          <button class="detail-thumb active" type="button" aria-label="Cover">${detailThumbHtml(book)}</button>
-        </div>
         <div class="detail-main-image">${detailCoverHtml(book)}</div>
       </div>
       <div class="detail-info">
@@ -253,7 +254,7 @@ async function openBook(id) {
           <tr><td>Published</td><td>${book.year}</td></tr>
           <tr><td>Availability</td><td>${book.stock > 0 ? `${book.stock} in stock` : "Out of stock"}</td></tr>
         </table>
-        <div class="tags">${book.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}</div>
+        ${book.tags.length ? `<div class="tags">${book.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}</div>` : ""}
         <div class="detail-actions-row">
           <button class="fav-heart-lg" type="button" data-favorite="${book.id}" aria-label="Toggle favorite">${isFavorite(book.id) ? "♥" : "♡"}</button>
           <input class="detail-qty" type="number" min="1" value="1" data-detail-qty aria-label="Quantity" />

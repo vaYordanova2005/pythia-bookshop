@@ -160,7 +160,7 @@ INSERT INTO books (title, description, pages, year, price, stock, cover_color, c
   ('Dune',                          'Epic survival story on the desert world Arrakis.',             412,  1965, 18.99, 7, '#2c4a2c', 'https://covers.openlibrary.org/b/isbn/9780441013593-L.jpg', 5, 1),
   ('Dracula',                       'The gothic tale of Count Dracula.',                            418,  1897, 14.50, 4, '#4a1a1a', 'https://covers.openlibrary.org/b/isbn/9780486411095-L.jpg', 9, 3),
   ('War and Peace',                 'Napoleon-era Russia through the eyes of noble families.',      1225, 1869, 22.00, 5, '#1a2a4a', 'https://covers.openlibrary.org/b/isbn/9781400079988-L.jpg', 8, 4),
-  ('Sherlock Holmes',               'Collected mysteries featuring the brilliant detective.',        307,  2024, 12.99, 9, '#3a2a1a', 'https://covers.openlibrary.org/b/isbn/9781503280125-L.jpg', 8, 5),
+  ('Sherlock Holmes',               'Collected mysteries featuring the brilliant detective.',        307,  2024, 12.99, 9, '#3a2a1a', 'https://covers.openlibrary.org/b/id/12501284-L.jpg', 8, 5),
   ('One Hundred Years of Solitude', 'The magical story of the Buendia family in Macondo.',          417,  1967, 19.90, 3, '#2a1a3a', 'https://covers.openlibrary.org/b/isbn/9780060883287-L.jpg', 9, 6),
   ('Cosmos',                        'A lucid exploration of the universe and our place in it.',     365,  1980, 16.90, 8, '#0a2840', 'https://covers.openlibrary.org/b/isbn/9780345539434-L.jpg', 8, 8),
   ('The Hitchhiker''s Guide',       'The funniest book in the universe — or any other.',            224,  1979, 13.50, 6, '#1a3a2a', 'https://covers.openlibrary.org/b/isbn/9780345391803-L.jpg', 7, 9)
