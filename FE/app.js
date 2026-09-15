@@ -502,6 +502,10 @@ document.addEventListener("click", async (event) => {
     $("[data-filter-panel]").classList.toggle("open");
     return;
   }
+  if (!event.target.closest(".genre-band")) $("[data-genre-menu]").classList.remove("open");
+  if (!event.target.closest(".filter-panel") && !event.target.closest(".filter-btn")) {
+    $("[data-filter-panel]").classList.remove("open");
+  }
 
   if (genre) {
     state.activeGenre = genre;

@@ -272,14 +272,14 @@ h1 { margin: 0; color: var(--brown); font-size: clamp(1.6rem, 4vw, 2.4rem); }
   position: absolute;
   right: 22px;
   top: 72px;
-  z-index: 40;
+  z-index: 200;
   display: none;
   flex-direction: column;
   gap: 12px;
   width: 230px;
   padding: 16px;
-  background: white;
-  border: 1px solid var(--line);
+  background: var(--cream);
+  border: 1.5px solid var(--green-mid);
   border-radius: 12px;
   box-shadow: 0 12px 28px rgba(80,72,36,.16);
 }
