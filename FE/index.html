@@ -9,7 +9,7 @@
   <body>
     <div id="app">
       <header class="logo-band">
-        <button class="logo-wrap" type="button" data-page-link="home" aria-label="Go to homepage">
+        <button class="logo-wrap" type="button" data-page-link="home" data-genre="all" aria-label="Go to homepage">
           <svg class="logo-mark" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pythia logo: temple with cute snake reading a book">
             <!-- TEMPLE -->
             <rect x="20" y="178" width="260" height="8" rx="2" fill="#C4922A" opacity=".65"/>
@@ -114,14 +114,12 @@
         <button class="nav-band-btn" type="button" data-page-link="community">Community</button>
         <button class="nav-band-btn" type="button" data-page-link="orders">📦 Orders</button>
         <button class="nav-band-btn" type="button" data-page-link="cart">Cart <span class="cart-badge" data-cart-count>0</span></button>
+        <button class="filter-btn" type="button" data-toggle="filter-panel">Filters</button>
       </nav>
 
       <main>
         <section id="page-home" class="page active">
           <div class="books-area">
-            <div class="books-top">
-              <button class="filter-btn" type="button" data-toggle="filter-panel">Filters</button>
-            </div>
             <aside class="filter-panel" data-filter-panel>
               <label>Price min <input type="number" min="0" data-price-min value="0" /></label>
               <label>Price max <input type="number" min="0" data-price-max value="100" /></label>

@@ -215,6 +215,7 @@ input, select, textarea { cursor: auto; }
   font-weight: 600;
 }
 .nav-band-btn:hover { background: var(--green-dark); color: white; border-color: var(--green-dark); }
+.nav-band .filter-btn { margin-left: auto; }
 .cart-badge {
   display: inline-grid;
   place-items: center;
